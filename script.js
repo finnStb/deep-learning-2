@@ -232,8 +232,8 @@ async function retrainModel(modelType) {
     model = createModelWithCustomParameters(learningRate, hiddenLayers, neuronsPerLayer, activationFunction);
 
     history = await trainModel(model, trainData, testData, epochs, batchSize);
-    plotPrediction(trainCtx, model, trainData, color, `${modelType == 'unrausched' ? 'unverrauschtes' : modelType} Modell (Train)`, trainLossElementId, 'Training');
-    plotPrediction(testCtx, model, testData, testColor, `${modelType == 'unrausched' ? 'unverrauschtes' : modelType} Modell (Test)`, testLossElementId, 'Test');
+    plotPrediction(trainCtx, model, trainData, color, `${modelType == 'unrausched' ? 'ohne Rauschen' : modelType == 'bestFit' ? 'Best-Fit Modell' : 'Overfit Modell'}`, trainLossElementId, 'Training');
+    plotPrediction(testCtx, model, testData, testColor, `${modelType == 'unrausched' ? 'ohne Rauschen' : modelType == 'bestFit' ? 'Best-Fit Modell' : 'Overfit Modell'} `, testLossElementId, 'Test');
     plotFinalLossHistory(lossCtx, history);
 
     hideLoader();
@@ -381,8 +381,8 @@ async function main() {
 
     const modelOverfit = createModel();
     const overfitHistory = await trainModel(modelOverfit, trainNoisy, testNoisy, 400);
-    plotPrediction(ctxOverfitPredictionTrain, modelOverfit, trainNoisy, trainColor, 'Overfit-Modell', 'lossOverfitTrain', 'Training');
-    plotPrediction(ctxOverfitPredictionTest, modelOverfit, testNoisy, testColor, 'Overfit-Modell', 'lossOverfitTest', 'Test');
+    plotPrediction(ctxOverfitPredictionTrain, modelOverfit, trainNoisy, trainColor, 'Overfit Modell', 'lossOverfitTrain', 'Training');
+    plotPrediction(ctxOverfitPredictionTest, modelOverfit, testNoisy, testColor, 'Overfit Modell', 'lossOverfitTest', 'Test');
     plotFinalLossHistory(document.getElementById('chartOverfitLossHistory').getContext('2d'), overfitHistory);
 
     hideLoader();
