@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Deep Learning Regression</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link href="custom-styles.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+</head>
+
+<body>
+    <div class="pt-20"></div> <!-- height of fixed navigation bar -->
+
+    <!-- Navigation bar -->
+    <nav id="navbar" class="fixed top-0 w-full z-50 bg-purple-500 text-white shadow-md p-2">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between">
+                <div class="flex space-x-4">
+                    <!-- Logo -->
+                    <!--a class="flex items-center py-2 px-1">
+                        <img src="resources/logo.png" alt="Logo" class="h-16 w-16" />
+                    </a-->
+                    <!-- Navigation links for large screens -->
+                    <div class="hidden md:flex items-center space-x-1">
+                        <a href="#results"
+                            class="nav-link py-3 px-3 font-semibold text-white hover:bg-purple-600 relative active rounded-xl">Plots</a>
+                        <div class="border-r border-gray-200 h-6 my-auto"></div>
+                        <a href="#discussion"
+                            class="nav-link py-3 px-3 font-semibold text-white hover:bg-purple-600 relative rounded-xl">Diskussion</a>
+                        <div class="border-r border-gray-200 h-6 my-auto"></div>
+                        <a href="#documentation"
+                            class="nav-link py-3 px-3 font-semibold text-white hover:bg-purple-600 relative rounded-xl">Dokumentation</a>
+                    </div>
+                </div>
+                <!-- Loader Animation -->
+                <div id="loader" class="hidden flex items-center space-x-2">
+                    <div class="loader rounded-full border-4 border-t-4 border-white h-6 w-6"></div>
+                    <span>Loading...</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+
+
+    <!-- Main heading -->
+    <h1
+        class="text-3xl lg:text-3xl font-bold text-gray-800 shadow-md p-5 rounded-lg bg-white border-purple-500 border-l-8">
+        Deep Learning Regression mit TensorFlow.js
+    </h1>
+
+    <!-- Results Section -->
+    <div id="results" class="mt-4 bg-gray-100 shadow-sm rounded-lg p-6 mx-auto max-w-7xl">
+        <h2 class="text-3xl text-purple-600 font-bold my-4 mx-auto">
+            Plots 📈
+        </h2>
+        <p class="standard-text">
+
+        </p>
+
+        <hr class="border-gray-300 my-4" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- R1: Datensätze -->
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto">Die beiden Datensätze</h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• ohne Rauschen</h3>
+                <canvas id="chartUnrauschedData"></canvas>
+            </div>
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto"> </h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• mit Rauschen</h3>
+                <canvas id="chartRauschedData"></canvas>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2 mt-4">Einstellungen für die Daten</h3>
+                <div class="mt-4 p-4 bg-gray-200 shadow-md rounded-lg">
+                    <label for="dataPoints" class="block text-sm font-medium text-gray-700">Anzahl der Datenpunkte
+                        (N)</label>
+                    <input type="number" id="dataPoints" class="mt-1 p-2 border border-gray-300 rounded-md w-full"
+                        value="100">
+                    <label for="noiseVariance" class="block text-sm font-medium text-gray-700 mt-2">Varianz des
+                        Rauschens</label>
+                    <input type="number" step="0.0001" id="noiseVariance"
+                        class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="0.05">
+                    <button onclick="updateData()"
+                        class="mt-4 bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600">Daten
+                        Aktualisieren</button>
+                </div>
+            </div>
+        </div>
+        <hr class="border-gray-300 my-4" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- R2: Vorhersage ohne Rauschen -->
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto">Modell ohne Rauschen</h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• auf Trainingsdaten</h3>
+                <canvas id="chartUnrauschedPredictionTrain"></canvas>
+                <p class="text-gray-600">    Loss (Train): <span id="lossUnrauschedTrain"></span></p>
+            </div>
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto"> </h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• auf Testdaten</h3>
+                <canvas id="chartUnrauschedPredictionTest"></canvas>
+                <p class="text-gray-600">    Loss (Test): <span id="lossUnrauschedTest"></span></p>
+
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Loss Verlauf</h3>
+                <canvas id="chartUnrauschedLossHistory"></canvas> <!-- Canvas für Loss-Verlauf hinzufügen -->
+            </div>
+            <div>
+
+                <!-- Eingabefelder für Modell ohne Rauschen -->
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Einstellungen</h3>
+                <div class="mt-4 p-4 bg-gray-200 shadow-md rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                            <label for="unrauschedEpochs" class="block text-sm font-medium text-gray-700">Anzahl der
+                                Epochen</label>
+                            <input type="number" id="unrauschedEpochs"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="150">
+                        </div>
+                        <div>
+                            <label for="unrauschedLearningRate" class="block text-sm font-medium text-gray-700">Learning
+                                Rate</label>
+                            <input type="number" step="0.0001" id="unrauschedLearningRate"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="0.01">
+                        </div>
+                        <div>
+
+                            <label for="unrauschedBatchSize" class="block text-sm font-medium text-gray-700 mt-2">Batch
+                                Size</label>
+                            <input type="number" id="unrauschedBatchSize"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="32">
+                        </div>
+                        <div>
+
+                            <label for="unrauschedHiddenLayers"
+                                class="block text-sm font-medium text-gray-700 mt-2">Anzahl
+                                der
+                                Hidden
+                                Layers</label>
+                            <input type="number" id="unrauschedHiddenLayers"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="2">
+                        </div>
+                        <div>
+
+                            <label for="unrauschedNeuronsPerLayer"
+                                class="block text-sm font-medium text-gray-700 mt-2">Neuronen
+                                pro Layer</label>
+                            <input type="number" id="unrauschedNeuronsPerLayer"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="100">
+                        </div>
+                        <div>
+
+                            <label for="unrauschedActivation"
+                                class="block text-sm font-medium text-gray-700 mt-2">Aktivierungsfunktion</label>
+                            <select id="unrauschedActivation" class="mt-1 p-2 border border-gray-300 rounded-md w-full">
+                                <option value="relu">ReLU</option>
+                                <option value="sigmoid">Sigmoid</option>
+                                <option value="tanh">Tanh</option>
+                            </select>
+                        </div>
+
+                        <button onclick="retrainModel('unrausched')"
+                            class="mt-4 bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600">Neu
+                            Trainieren</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <hr class="border-gray-300 my-4" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- R3: Vorhersage Best-Fit Modell -->
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto">Best-Fit Modell</h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• auf Trainingsdaten
+                </h3>
+                <canvas id="chartBestFitPredictionTrain"></canvas>
+                <p class="text-gray-600">    Loss (Train): <span id="lossBestFitTrain"></span></p>
+            </div>
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto"> </h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• auf Testdaten</h3>
+                <canvas id="chartBestFitPredictionTest"></canvas>
+                <p class="text-gray-600">    Loss (Test): <span id="lossBestFitTest"></span></p>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Loss Verlauf</h3>
+                <canvas id="chartBestFitLossHistory"></canvas> <!-- Canvas für Loss-Verlauf hinzufügen -->
+            </div>
+            <div>
+
+                <!-- Eingabefelder für Best-Fit Modell -->
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Einstellungen</h3>
+                <div class="mt-4 p-4 bg-gray-200 shadow-md rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                            <label for="bestFitEpochs" class="block text-sm font-medium text-gray-700">Anzahl der
+                                Epochen</label>
+                            <input type="number" id="bestFitEpochs"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="85">
+                        </div>
+                        <div>
+                            <label for="bestFitLearningRate" class="block text-sm font-medium text-gray-700">Learning
+                                Rate</label>
+                            <input type="number" step="0.0001" id="bestFitLearningRate"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="0.01">
+                        </div>
+                        <div>
+
+                            <label for="bestFitBatchSize" class="block text-sm font-medium text-gray-700 mt-2">Batch
+                                Size</label>
+                            <input type="number" id="bestFitBatchSize"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="32">
+                        </div>
+                        <div>
+
+                            <label for="bestFitHiddenLayers" class="block text-sm font-medium text-gray-700 mt-2">Anzahl
+                                der
+                                Hidden
+                                Layers</label>
+                            <input type="number" id="bestFitHiddenLayers"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="2">
+                        </div>
+                        <div>
+
+                            <label for="bestFitNeuronsPerLayer"
+                                class="block text-sm font-medium text-gray-700 mt-2">Neuronen
+                                pro Layer</label>
+                            <input type="number" id="bestFitNeuronsPerLayer"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="100">
+                        </div>
+                        <div>
+
+                            <label for="bestFitActivation"
+                                class="block text-sm font-medium text-gray-700 mt-2">Aktivierungsfunktion</label>
+                            <select id="bestFitActivation" class="mt-1 p-2 border border-gray-300 rounded-md w-full">
+                                <option value="relu">ReLU</option>
+                                <option value="sigmoid">Sigmoid</option>
+                                <option value="tanh">Tanh</option>
+                            </select>
+                        </div>
+
+                        <button onclick="retrainModel('bestFit')"
+                            class="mt-4 bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600">Neu
+                            Trainieren</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <hr class="border-gray-300 my-4" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- R4: Vorhersage Overfit-Modell -->
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto">Overfit Modell</h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• auf Trainingsdaten
+                </h3>
+                <canvas id="chartOverfitPredictionTrain"></canvas>
+                <p class="text-gray-600">    Loss (Train): <span id="lossOverfitTrain"></span></p>
+            </div>
+            <div>
+                <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto"> </h2>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">• auf Testdaten</h3>
+                <canvas id="chartOverfitPredictionTest"></canvas>
+                <p class="text-gray-600">    Loss (Test): <span id="lossOverfitTest"></span></p>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Loss Verlauf</h3>
+                <canvas id="chartOverfitLossHistory"></canvas> <!-- Canvas für Loss-Verlauf hinzufügen -->
+            </div>
+            <div>
+
+                <!-- Eingabefelder für Overfit Modell -->
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Einstellungen</h3>
+                <div class="mt-4 p-4 bg-gray-200 shadow-md rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                            <label for="overfitEpochs" class="block text-sm font-medium text-gray-700">Anzahl der
+                                Epochen</label>
+                            <input type="number" id="overfitEpochs"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="400">
+                        </div>
+                        <div>
+                            <label for="overfitLearningRate" class="block text-sm font-medium text-gray-700">Learning
+                                Rate</label>
+                            <input type="number" step="0.0001" id="overfitLearningRate"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="0.01">
+                        </div>
+                        <div>
+
+                            <label for="overfitBatchSize" class="block text-sm font-medium text-gray-700 mt-2">Batch
+                                Size</label>
+                            <input type="number" id="overfitBatchSize"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="32">
+                        </div>
+                        <div>
+
+                            <label for="overfitHiddenLayers" class="block text-sm font-medium text-gray-700 mt-2">Anzahl
+                                der
+                                Hidden
+                                Layers</label>
+                            <input type="number" id="overfitHiddenLayers"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="2">
+                        </div>
+                        <div>
+
+                            <label for="overfitNeuronsPerLayer"
+                                class="block text-sm font-medium text-gray-700 mt-2">Neuronen
+                                pro Layer</label>
+                            <input type="number" id="overfitNeuronsPerLayer"
+                                class="mt-1 p-2 border border-gray-300 rounded-md w-full" value="100">
+                        </div>
+                        <div>
+
+                            <label for="overfitActivation"
+                                class="block text-sm font-medium text-gray-700 mt-2">Aktivierungsfunktion</label>
+                            <select id="overfitActivation" class="mt-1 p-2 border border-gray-300 rounded-md w-full">
+                                <option value="relu">ReLU</option>
+                                <option value="sigmoid">Sigmoid</option>
+                                <option value="tanh">Tanh</option>
+                            </select>
+                        </div>
+
+                        <button onclick="retrainModel('overfit')"
+                            class="mt-4 bg-purple-500 text-white py-2 px-4 rounded-md hover:bg-purple-600">Neu
+                            Trainieren</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Discussion Section -->
+    <div id="discussion" class="mt-8 bg-gray-100 shadow-sm rounded-lg p-6 mx-auto max-w-7xl">
+        <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto">
+            Diskussion 💡
+        </h2>
+        <div class="px-4 py-5 sm:px-6 bg-gray-100 shadow-sm rounded-lg">
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li>Die Vorhersagen des Modells auf den unverrauschten Daten (hier mit 150 Epochen) haben sehr
+                    geringe
+                    Loss-Werte; auch der Test-Loss ist gering. Bei den cleanen Daten kann kein Overfitting
+                    auftreten, weil der tatsächliche Funktionsverlauf
+                    gelernt wird und keine zufälligen Muster auswendig gelernt werden.<br>
+                        - Bester Train-Loss: 0.0056<br>
+                        - Bester Test-Loss: 0.0133
+                </li>
+                <li>
+                    Das Best-Fit Modell soll versuchen, die zugrunde liegende Funktion zu approximieren, ohne zu
+                    stark auf
+                    die zufälligen Muster zu reagieren, die durch das Verrauschen entstanden sind.
+                    Nach etwa 85 Epochen sinkt der Loss meist nur noch sehr langsam, deshalb wurde für gutes
+                    Generalisieren diese Anzahl an Epochen gewählt. Die Loss-Werte sind erwartungsgemäß höher als
+                    bei den cleanen Daten,
+                    was zum einen durch Abstände zu den Datenpunkten und zum anderen die Beeinflussung des Trainings
+                    durch das Rauschen erklärt werden kann. Train-Loss ist meist etwas niedriger als Test-Loss, aber
+                    es kann auch umgekehrt vorkommen, was ein Zeichen für gutes Generalisieren ist.<br>
+                        - Bester Train-Loss: 0.0979<br>
+                        - Bester Test-Loss: 0.0892
+                </li>
+                <li>Die 400 Epochen beim Overfitting Modell führen dazu, dass auch die zufälligen Muster durchs
+                    Rauschen vom Modell eingeprägt werden. Train-Loss ist hier i.d.R. deutlich niedriger als
+                    Test-Loss aufgrund des Overfittings.<br>
+                        - Bester Train-Loss: 0.0308<br>
+                        - Bester Test-Loss: 0.0945
+                </li>
+                <li>
+                    Die Anzahl der Hidden Layers und der Neuronen beeinflussen die Modellkomplexität:
+                    Höhere Komplexität zeigte in meinen Experimenten nicht unbedingt bessere Ergebnisse, ab einem
+                    gewissen Punkt eher das Gegenteil. Zu geringe Komplexität kann aber auch zu Underfitting führen
+                    und erfasst selbst bei vielen Epochen den Funktionsverlauf einfach nicht umfassend genug.
+                    Die Aktivierungsfunktion ReLU hat sich in den meisten Fällen als die beste erwiesen.
+                </li>
+
+
+            </ul>
+        </div>
+    </div>
+
+    <!-- Documentation Section -->
+    <div id="documentation" class="mt-8 bg-gray-100 shadow-sm rounded-lg p-6 mx-auto max-w-7xl">
+        <h2 class="text-2xl text-purple-600 font-bold my-4 mx-auto">
+            Dokumentation 📚
+        </h2>
+        <div class="px-4 py-5 sm:px-6 bg-gray-100 shadow-sm rounded-lg">
+            <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-4 mx-auto px-4">Technische Dokumentation</h3>
+            <ul class="list-disc list-inside text-gray-600 space-y-2">
+                <li><strong>Verwendete Frameworks:</strong> TensorFlow.js, Chart.js, Tailwind CSS</li>
+                <li><strong>TensorFlow.js:</strong> Zum Erstellen und Trainieren der neuronalen Netze</li>
+                <li><strong>Chart.js:</strong> Zum Visualisieren der Daten und Vorhersagen</li>
+                <li><strong>Tailwind CSS:</strong> Für das Styling und Layout der Webseite</li>
+            </ul>
+            <hr class="border-gray-300 my-4" />
+            <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-4 mx-auto px-4">Fachliche Dokumentation</h3>
+            <p class="text-gray-600 space-y-2">Die Implementierung nutzt TensorFlow.js zur Erstellung und zum
+                Training von
+                Feed-Forward Neural
+                Networks (FFNN). Zuerst wurden Datenpunkte erzeugt und in Trainings- und
+                Testdaten
+                aufgeteilt, wobei saubere und verrauschte Daten generiert wurden. Die Modelle wurden mit
+                verschiedenen
+                Hyperparametern wie der Anzahl der Epochen, der Lernrate, der Anzahl der Neuronen pro Layer, der
+                Aktivierungsfunktion (ReLU) und der Batch-Größe trainiert.
+                Eine Besonderheit
+                meiner Lösung ist die Visualisierung des Loss-Verlaufs während des Trainings, die es ermöglicht, das
+                Overfitting klar zu beobachten. Die verwendeten Quellen umfassen die offiziellen Dokumentationen von
+                TensorFlow.js
+                und Chart.js sowie relevante Tutorials und Beispiele zur Datenvorverarbeitung und Modellbewertung,
+                inklusive des stackoverflow-Beitrags zur Box-Muller Transformation für den Gaussian Noise.
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="navigation.js"></script>
+</body>
+
+</html>
