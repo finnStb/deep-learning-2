@@ -232,8 +232,8 @@ async function retrainModel(modelType) {
     model = createModelWithCustomParameters(learningRate, hiddenLayers, neuronsPerLayer, activationFunction);
 
     history = await trainModel(model, trainData, testData, epochs, batchSize);
-    plotPrediction(trainCtx, model, trainData, color, `Vorhersage mit ${modelType} Modell (Train)`, trainLossElementId);
-    plotPrediction(testCtx, model, testData, testColor, `Vorhersage mit ${modelType} Modell (Test)`, testLossElementId);
+    plotPrediction(trainCtx, model, trainData, color, `${modelType == 'unrausched' ? 'unverrauschtes' : modelType} Modell (Train)`, trainLossElementId, 'Training');
+    plotPrediction(testCtx, model, testData, testColor, `${modelType == 'unrausched' ? 'unverrauschtes' : modelType} Modell (Test)`, testLossElementId, 'Test');
     plotFinalLossHistory(lossCtx, history);
 
     hideLoader();
@@ -324,7 +324,7 @@ function plotFinalLossHistory(ctx, history) {
 }
 
 // Vorhersage plotten
-function plotPrediction(ctx, model, data, color, title, lossElementId) {
+function plotPrediction(ctx, model, data, color, title, lossElementId, type) {
     const xValues = Array.from({ length: 100 }, (_, i) => -2 + (i * 4) / 99);
     const yPredicted = model.predict(tf.tensor2d(xValues, [xValues.length, 1])).dataSync();
 
@@ -337,14 +337,14 @@ function plotPrediction(ctx, model, data, color, title, lossElementId) {
         data: {
             datasets: [
                 {
-                    label: `${title} - Prediction`,
+                    label: `Prediction: ${title}`,
                     data: xValues.map((x, i) => ({ x: x, y: yPredicted[i] })),
                     backgroundColor: 'rgba(210, 210, 210, 0.5)',
                     showLine: true,
                     fill: false,
                 },
                 {
-                    label: `${title}`,
+                    label: `${type} Data`,
                     data: data.xValues.map((x, i) => ({ x: x, y: data.yValues[i] })),
                     backgroundColor: color,
                 },
@@ -369,20 +369,20 @@ async function main() {
 
     const modelClean = createModel();
     const cleanHistory = await trainModel(modelClean, trainClean, testClean, 150);
-    plotPrediction(ctxUnrauschedPredictionTrain, modelClean, trainClean, trainColor, 'Vorhersage ohne Rauschen (Train)', 'lossUnrauschedTrain');
-    plotPrediction(ctxUnrauschedPredictionTest, modelClean, testClean, testColor, 'Vorhersage ohne Rauschen (Test)', 'lossUnrauschedTest');
+    plotPrediction(ctxUnrauschedPredictionTrain, modelClean, trainClean, trainColor, 'ohne Rauschen', 'lossUnrauschedTrain', 'Training');
+    plotPrediction(ctxUnrauschedPredictionTest, modelClean, testClean, testColor, 'ohne Rauschen', 'lossUnrauschedTest', 'Test');
     plotFinalLossHistory(document.getElementById('chartUnrauschedLossHistory').getContext('2d'), cleanHistory);
 
     const modelBestFit = createModel();
     const bestFitHistory = await trainModel(modelBestFit, trainNoisy, testNoisy, 85);
-    plotPrediction(ctxBestFitPredictionTrain, modelBestFit, trainNoisy, trainColor, 'Vorhersage mit Best-Fit Modell (Train)', 'lossBestFitTrain');
-    plotPrediction(ctxBestFitPredictionTest, modelBestFit, testNoisy, testColor, 'Vorhersage mit Best-Fit Modell (Test)', 'lossBestFitTest');
+    plotPrediction(ctxBestFitPredictionTrain, modelBestFit, trainNoisy, trainColor, 'Best-Fit Modell', 'lossBestFitTrain', 'Training');
+    plotPrediction(ctxBestFitPredictionTest, modelBestFit, testNoisy, testColor, 'Best-Fit Modell', 'lossBestFitTest', 'Test');
     plotFinalLossHistory(document.getElementById('chartBestFitLossHistory').getContext('2d'), bestFitHistory);
 
     const modelOverfit = createModel();
     const overfitHistory = await trainModel(modelOverfit, trainNoisy, testNoisy, 400);
-    plotPrediction(ctxOverfitPredictionTrain, modelOverfit, trainNoisy, trainColor, 'Vorhersage mit Overfit-Modell (Train)', 'lossOverfitTrain');
-    plotPrediction(ctxOverfitPredictionTest, modelOverfit, testNoisy, testColor, 'Vorhersage mit Overfit-Modell (Test)', 'lossOverfitTest');
+    plotPrediction(ctxOverfitPredictionTrain, modelOverfit, trainNoisy, trainColor, 'Overfit-Modell', 'lossOverfitTrain', 'Training');
+    plotPrediction(ctxOverfitPredictionTest, modelOverfit, testNoisy, testColor, 'Overfit-Modell', 'lossOverfitTest', 'Test');
     plotFinalLossHistory(document.getElementById('chartOverfitLossHistory').getContext('2d'), overfitHistory);
 
     hideLoader();
