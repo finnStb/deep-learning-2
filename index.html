@@ -387,6 +387,14 @@
                     und erfasst selbst bei vielen Epochen den Funktionsverlauf einfach nicht umfassend genug.
                     Die Aktivierungsfunktion ReLU hat sich in den meisten Fällen als die beste erwiesen.
                 </li>
+                <li>
+                    Bei sehr vielen Datenpunkten (1000) kann das Modell bereits bei 20 Epochen sehr gut generalisieren,
+                    aber auch bei vielen Epochen (200+) kommt es aufgrund der hohen Dichte der Datenpunkte nicht zum
+                    Overfitting.
+                    Bei sehr wenigen Datenpunkten (10) kommt es sehr schnell zum Overfitting und es wird nie eine gute
+                    Generalisierung erreicht,
+                    weil dafür einfach zu wenig Informationen über die zugrunde liegende Funktion vorhanden sind.
+                </li>
 
 
             </ul>
